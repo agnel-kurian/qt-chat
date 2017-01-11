@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTcpSocket>
+#include <QVector>
 
 namespace Ui {
 class MainWindow;
@@ -21,12 +23,19 @@ public:
 
 private slots:
     void sessionOpened();
+    void clientConnected();
+    void authenticate();
+    void messageReceived();
+    void signOut();
+    void handleError(QAbstractSocket::SocketError socketError);
 
 private:
     Ui::MainWindow *ui;
     QNetworkSession *networkSession;
     QTcpServer *tcpServer;
     QLabel *statusLabel;
+
+    QVector<QTcpSocket*> clientCxns;
 
 };
 

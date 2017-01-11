@@ -36,6 +36,75 @@ MainWindow::MainWindow(QWidget *parent) :
         sessionOpened();
     }
 
+    connect(tcpServer, &QTcpServer::newConnection, this,
+            &MainWindow::clientConnected);
+
+}
+
+void MainWindow::clientConnected(){
+    QTcpSocket *clientCxn = tcpServer->nextPendingConnection();
+    connect(clientCxn, &QAbstractSocket::disconnected,
+            clientCxn, &QObject::deleteLater);
+
+    connect(clientCxn, &QIODevice::readyRead, this, &MainWindow::authenticate);
+
+    typedef void (QAbstractSocket::*QAbstractSocketErrorSignal)(
+                QAbstractSocket::SocketError);
+    connect(clientCxn,
+            static_cast<QAbstractSocketErrorSignal>(&QAbstractSocket::error),
+            this, &MainWindow::handleError);
+    connect(clientCxn, &QAbstractSocket::disconnected, this,
+            &MainWindow::signOut);
+}
+
+void MainWindow::signOut(){
+    QTcpSocket *clientCxn = dynamic_cast<QTcpSocket*>(sender());
+    if(!clientCxn) return;
+
+    //  remove clientCxn from list of clients
+    int iclient = clientCxns.indexOf(clientCxn);
+    Q_ASSERT(iclient != -1);
+    if(iclient != -1){
+        clientCxns.remove(iclient);
+    }
+}
+
+void MainWindow::authenticate(){
+    QTcpSocket *clientCxn = dynamic_cast<QTcpSocket*>(sender());
+    if(!clientCxn) return;
+
+    //  if credentials have not been read fully
+    //      return
+
+    //  read a login name and password
+
+    //  authenticate
+    //  write success/failure to client
+
+    //  if authentication failed
+    //      close clientCxn return
+
+    //  disconnect authenticate from readReady signal
+    disconnect(clientCxn, &QIODevice::readyRead, this,
+               &MainWindow::authenticate);
+
+    //  add clientCxn to list of connected clients
+
+    //  connect messageReceived to readReady signal
+    connect(clientCxn, &QIODevice::readyRead, this,
+            &MainWindow::messageReceived);
+
+}
+
+void MainWindow::messageReceived(){
+    QTcpSocket *clientCxn = dynamic_cast<QTcpSocket*>(sender());
+    if(!clientCxn) return;
+
+    //  loop through all clients except this one and send them the message
+}
+
+void MainWindow::handleError(QAbstractSocket::SocketError /*socketError*/){
+    //socketError;
 }
 
 MainWindow::~MainWindow()
@@ -50,7 +119,8 @@ void MainWindow::sessionOpened()
         QNetworkConfiguration config = networkSession->configuration();
         QString id;
         if (config.type() == QNetworkConfiguration::UserChoice)
-            id = networkSession->sessionProperty(QLatin1String("UserChoiceConfiguration")).toString();
+            id = networkSession->sessionProperty(
+                        QLatin1String("UserChoiceConfiguration")).toString();
         else
             id = config.identifier();
 
