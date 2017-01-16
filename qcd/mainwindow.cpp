@@ -4,9 +4,12 @@
 #include <QtNetwork>
 #include <QtWidgets>
 
+#include <QtDebug>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    networkSession(Q_NULLPTR)
 {
     ui->setupUi(this);
     statusLabel = new QLabel;
@@ -59,19 +62,27 @@ void MainWindow::clientConnected(){
 
 void MainWindow::signOut(){
     QTcpSocket *clientCxn = dynamic_cast<QTcpSocket*>(sender());
-    if(!clientCxn) return;
+    if(!clientCxn){
+        Q_ASSERT(false);
+        qDebug() << "Not able to retrieve socket during authenticate";
+        return;
+    }
 
     //  remove clientCxn from list of clients
-    int iclient = clientCxns.indexOf(clientCxn);
-    Q_ASSERT(iclient != -1);
-    if(iclient != -1){
-        clientCxns.remove(iclient);
-    }
+    if(clientCxns.contains(clientCxn))
+        clientCxns.remove(clientCxn);
+    else
+        qDebug() << "Unknown client socket (" << static_cast<void*>(clientCxn)
+                 << ") during signOut";
 }
 
 void MainWindow::authenticate(){
     QTcpSocket *clientCxn = dynamic_cast<QTcpSocket*>(sender());
-    if(!clientCxn) return;
+    if(!clientCxn){
+        Q_ASSERT(false);
+        qDebug() << "Not able to retrieve socket during authenticate";
+        return;
+    }
 
     //  if credentials have not been read fully
     //      return

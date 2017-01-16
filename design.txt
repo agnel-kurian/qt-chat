@@ -1,0 +1,1 @@
+We use one QDataStream per client so as to avoiding overlapping reads when multiple clients are connected.

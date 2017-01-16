@@ -5,6 +5,8 @@
 #include <QTcpSocket>
 #include <QVector>
 
+#include "clientcxn.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -34,8 +36,10 @@ private:
     QNetworkSession *networkSession;
     QTcpServer *tcpServer;
     QLabel *statusLabel;
+    QDataStream in;
 
-    QVector<QTcpSocket*> clientCxns;
+
+    QMap<QTcpSocket*, ClientCxn*> clientCxns;
 
 };
 
